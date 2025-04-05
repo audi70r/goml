@@ -60,12 +60,11 @@ func trainLinearModel(inputs []map[string]interface{}, outputs []map[string]inte
 		count := 0
 		for i := range inputs {
 			if val, ok := inputs[i][feature]; ok {
-				switch v := val.(type) {
-				case float64:
-					sum += v
-					count++
-				case int:
-					sum += float64(v)
+				// Only include numeric types in mean calculation
+				if IsSupportedNumericType(val) {
+					// Safe to convert since we checked type
+					numVal, _ := ConvertToFloat64(val, "")
+					sum += numVal
 					count++
 				}
 			}
@@ -82,12 +81,11 @@ func trainLinearModel(inputs []map[string]interface{}, outputs []map[string]inte
 		count := 0
 		for i := range outputs {
 			if val, ok := outputs[i][target]; ok {
-				switch v := val.(type) {
-				case float64:
-					sum += v
-					count++
-				case int:
-					sum += float64(v)
+				// Only include numeric types in mean calculation
+				if IsSupportedNumericType(val) {
+					// Safe to convert since we checked type
+					numVal, _ := ConvertToFloat64(val, "")
+					sum += numVal
 					count++
 				}
 			}
@@ -174,6 +172,12 @@ func trainLinearModel(inputs []map[string]interface{}, outputs []map[string]inte
 								fValFloat = v
 							case int:
 								fValFloat = float64(v)
+							case bool:
+								if v {
+									fValFloat = 1.0
+								} else {
+									fValFloat = 0.0
+								}
 							case string:
 								if v == f {
 									fValFloat = 1.0
