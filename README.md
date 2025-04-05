@@ -387,15 +387,18 @@ To handle both numeric and string outputs, use separate models:
 ```go
 // For numeric outputs
 numericModel := goml.NewLinearModel()
-numericEngine := goml.New().WithModel(numericModel.JSON())
+numericEngine := goml.New()
+_, _ = numericEngine.WithModel(numericModel.JSON())
 
 // For string outputs 
 stringModel := goml.NewCategoricalModel()
-stringEngine := goml.New().WithModel(stringModel.JSON())
+stringEngine := goml.New()
+_, _ = stringEngine.WithModel(stringModel.JSON())
 
 // For boolean outputs
 boolModel := goml.NewLogisticModel()
-boolEngine := goml.New().WithModel(boolModel.JSON())
+boolEngine := goml.New()
+_, _ = boolEngine.WithModel(boolModel.JSON())
 
 // Train all models with the same inputs but different outputs
 numericEngine.Train(inputs, numericOutputs)
