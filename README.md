@@ -1,5 +1,9 @@
 # GOML - Machine Learning in Go
 
+<p align="center">
+  <img src="goml.png" alt="GOML - Simple Machine Learning in Go" width="600">
+</p>
+
 GOML is a simple machine learning package in Go that supports training and inference with multiple input/output parameters using generic types. It's designed to be easy to use while providing flexible model serialization and configuration options.
 
 ## Features
