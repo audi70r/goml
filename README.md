@@ -12,10 +12,11 @@ GOML is a simple yet powerful machine learning package in Go that supports train
 - Support for various data types (numeric, string, boolean) for both inputs and outputs
 - Serialization of models and weights to JSON for persistence
 - Flexible training configuration
-- Support for three specialized model types:
+- Support for four specialized model types:
   - Linear regression (numeric outputs - both int and float)
   - Logistic regression (binary classification with boolean or 0/1 outputs)
   - Categorical classification (string/categorical outputs)
+  - Mixed model (handles any combination of numeric, boolean, and string outputs)
 - Automatic model type detection based on output data
 - Ability to save and restore trained models
 - Support for mixed input types (numeric, string, boolean) with all model types
@@ -340,9 +341,10 @@ engine, err := goml.TrainAuto(inputs, outputs)
 
 The auto-detection follows these rules:
 
-1. If any output value is a string → Categorical model
-2. If all values are 0/1 or boolean → Logistic model
-3. For any other numeric outputs → Linear model
+1. If outputs contain a mix of data types (string, numeric, boolean) → Mixed model
+2. If any output value is a string (and no other types) → Categorical model
+3. If all values are 0/1 or boolean → Logistic model
+4. For any other numeric outputs → Linear model
 
 Examples:
 
@@ -378,6 +380,15 @@ boolOutputs := map[string]interface{}{
 }
 autoBoolEngine := goml.NewAuto(boolOutputs)
 // Result: Logistic model
+
+// Automatic detection of mixed output types
+mixedOutputs := map[string]interface{}{
+    "category": "electronics",  // string output
+    "price": 100.0,             // numeric output
+    "in_stock": true            // boolean output
+}
+autoMixedEngine := goml.NewAuto(mixedOutputs)
+// Result: Mixed model
 ```
 
 ### Working with Multiple Output Types
@@ -423,6 +434,53 @@ for k, v := range boolPred {
 }
 
 fmt.Println("Combined prediction:", combinedResult)
+```
+
+### Mixed Model for Multiple Output Types
+
+The mixed model can handle any combination of output types (string, numeric, boolean) simultaneously:
+
+```go
+// Example with fully mixed output types
+mixedInputs := []map[string]interface{}{
+    {"metric1": 1.0, "category": "red", "flag": true},
+    {"metric1": 2.0, "category": "blue", "flag": false},
+    {"metric1": 3.0, "category": "green", "flag": true},
+    {"metric1": 4.0, "category": "yellow", "flag": false},
+}
+
+// Outputs with mixed types (string, numeric, and boolean)
+mixedOutputs := []map[string]interface{}{
+    {"string_output": "small", "numeric_output": 10.5, "boolean_output": true},
+    {"string_output": "medium", "numeric_output": 20.5, "boolean_output": false},
+    {"string_output": "large", "numeric_output": 30.5, "boolean_output": true},
+    {"string_output": "extra", "numeric_output": 40.5, "boolean_output": false},
+}
+
+// Auto-detect model type (will choose mixed model) and train
+mixedEngine, err := goml.TrainAuto(mixedInputs, mixedOutputs)
+if err != nil {
+    fmt.Printf("Mixed output training error: %v\n", err)
+    return
+}
+
+// Verify the selected model type
+modelJSON, _ := mixedEngine.GetModel()
+fmt.Println("Model type:", *modelJSON) // Will show mixed model
+
+// Make a prediction with all output types handled simultaneously
+prediction, _ := mixedEngine.Predict(map[string]interface{}{
+    "metric1": 2.5,
+    "category": "red",
+    "flag": true,
+})
+
+// Result will contain all output types:
+// {
+//   "string_output": "medium",
+//   "numeric_output": 25.3,
+//   "boolean_output": true
+// }
 ```
 
 ## Advanced Usage
@@ -492,6 +550,7 @@ GOML handles type conversion internally:
 - `NewLinearModel() *Model`: Creates a linear regression model for numeric outputs
 - `NewLogisticModel() *Model`: Creates a logistic regression model for binary classification
 - `NewCategoricalModel() *Model`: Creates a categorical model for string outputs
+- `NewMixedModel() *Model`: Creates a model that can handle mixed output types (string, numeric, boolean)
 - `NewAutoModel(outputSample map[string]interface{}) *Model`: Auto-detects and creates the appropriate model
 
 ### Config Parameters

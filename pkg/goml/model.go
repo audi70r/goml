@@ -8,9 +8,9 @@ import (
 type Model struct {
 	Type              string                    `json:"type"`
 	Parameters        map[string]interface{}    `json:"parameters"`
-	Features          map[string]interface{}    `json:"features,omitempty"`           // Feature metadata (e.g., type, mean, min, max)
-	Targets           map[string]interface{}    `json:"targets,omitempty"`            // Target metadata (e.g., type)
-	Categories        map[string]map[string]int `json:"categories,omitempty"`         // Maps output names to category->index mappings
+	Features          map[string]interface{}    `json:"features,omitempty"`          // Feature metadata (e.g., type, mean, min, max)
+	Targets           map[string]interface{}    `json:"targets,omitempty"`           // Target metadata (e.g., type)
+	Categories        map[string]map[string]int `json:"categories,omitempty"`        // Maps output names to category->index mappings
 	FeatureCategories map[string]map[string]int `json:"feature_categories,omitempty"` // Maps categorical feature names to value->index mappings
 }
 
@@ -91,23 +91,46 @@ func NewCategoricalModel() *Model {
 // NewAutoModel automatically creates the right model type based on outputs
 // It analyzes the provided sample of output data to determine model type
 func NewAutoModel(outputSample map[string]interface{}) *Model {
-	// Check if output is suitable for logistic regression (binary classification)
-	isLogistic := true
-	isCategorical := false
-
-	// Check for string values (categorical)
+	// Check if we have mixed output types
+	hasString := false
+	hasNumeric := false
+	hasBoolean := false
+	
+	// Analyze all output types
 	for _, val := range outputSample {
-		if _, ok := val.(string); ok {
-			isLogistic = false
-			isCategorical = true
-			break
+		switch v := val.(type) {
+		case string:
+			hasString = true
+		case bool:
+			hasBoolean = true
+		case int, int32, int64, float32, float64:
+			hasNumeric = true
+		default:
+			// Try to see if it's a numeric type that wasn't caught
+			if IsSupportedNumericType(v) {
+				hasNumeric = true
+			}
 		}
 	}
-
-	// If no string values, check if all values are 0/1 (binary)
-	if !isCategorical && isLogistic {
+	
+	// If we have mixed types (string and numeric/boolean), use mixed model
+	if (hasString && hasNumeric) || (hasString && hasBoolean) || (hasNumeric && hasBoolean) {
+		return NewMixedModel()
+	}
+	
+	// If all outputs are strings, use categorical
+	if hasString {
+		return NewCategoricalModel()
+	}
+	
+	// Check if all values are binary (0/1) or boolean
+	isLogistic := hasBoolean // Already logistic if we have boolean outputs
+	
+	// If we don't already know it's logistic, check numeric values
+	if !isLogistic && hasNumeric {
+		isLogistic = true // Assume it's logistic until proven otherwise
+		
 		for _, val := range outputSample {
-			// Check for binary values (0/1)
 			switch v := val.(type) {
 			case int:
 				if v != 0 && v != 1 {
@@ -117,19 +140,14 @@ func NewAutoModel(outputSample map[string]interface{}) *Model {
 				if v != 0.0 && v != 1.0 {
 					isLogistic = false
 				}
-			case bool:
-				// Booleans are perfect for logistic regression
-				continue
 			default:
-				isLogistic = false
+				// Other types already handled above
 			}
 		}
 	}
-
+	
 	// Create and return the appropriate model
-	if isCategorical {
-		return NewCategoricalModel()
-	} else if isLogistic {
+	if isLogistic {
 		return NewLogisticModel()
 	} else {
 		// Default to linear for all other cases

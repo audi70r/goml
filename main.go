@@ -298,8 +298,8 @@ func main() {
 	fmt.Println("------------------")
 	fmt.Println("The GOML package supports:")
 	fmt.Println("1. All input types: int, float64, string, bool")
-	fmt.Println("2. All output types: int, float64, string")
-	fmt.Println("3. Multiple outputs of different types in separate models")
+	fmt.Println("2. All output types: int, float64, string, bool")
+	fmt.Println("3. Multiple outputs of different types in a single model or separate models")
 
 	fmt.Println("\nFor mixed input/output types, use the automatic model selection:")
 	fmt.Println("- goml.NewAuto(outputSample) - create engine with automatic model selection")
@@ -377,5 +377,52 @@ func main() {
 		})
 
 		fmt.Println("Boolean prediction:", boolPrediction)
+	}
+
+	// Demonstrating mixed output types with auto-detection
+	fmt.Println("\n\nMixed Output Types Example")
+	fmt.Println("---------------------------")
+
+	// Example with fully mixed output types
+	mixedInputs := []map[string]interface{}{
+		{"metric1": 1.0, "category": "red", "flag": true},
+		{"metric1": 2.0, "category": "blue", "flag": false},
+		{"metric1": 3.0, "category": "green", "flag": true},
+		{"metric1": 4.0, "category": "yellow", "flag": false},
+	}
+
+	// Outputs with mixed types (string, numeric, and boolean)
+	mixedOutputs := []map[string]interface{}{
+		{"string_output": "small", "numeric_output": 10.5, "boolean_output": true},
+		{"string_output": "medium", "numeric_output": 20.5, "boolean_output": false},
+		{"string_output": "large", "numeric_output": 30.5, "boolean_output": true},
+		{"string_output": "extra", "numeric_output": 40.5, "boolean_output": false},
+	}
+
+	// Auto-detect model type for mixed outputs
+	mixedEngine, err := goml.TrainAuto(mixedInputs, mixedOutputs)
+	if err != nil {
+		fmt.Printf("Mixed output training error: %v\n", err)
+	} else {
+		// Check the model type that was auto-detected
+		modelJSON, _ := mixedEngine.GetModel()
+		fmt.Println("Auto-detected model type for mixed outputs:", *modelJSON)
+
+		// Make a prediction with mixed outputs
+		mixedPrediction, _ := mixedEngine.Predict(map[string]interface{}{
+			"metric1":  2.5,
+			"category": "red",
+			"flag":     true,
+		})
+
+		fmt.Println("\nMixed output prediction:")
+		mixedPredJSON, _ := json.MarshalIndent(mixedPrediction, "", "  ")
+		fmt.Println(string(mixedPredJSON))
+
+		// Explain the result
+		fmt.Println("\nThe mixed model handles all output types simultaneously:")
+		fmt.Println("- String output handled by categorical model")
+		fmt.Println("- Numeric output handled by linear model")
+		fmt.Println("- Boolean output handled by logistic model")
 	}
 }
