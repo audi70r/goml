@@ -6,6 +6,26 @@
 
 GOML is a simple yet powerful machine learning package in Go that supports training and inference with multiple input/output parameters using generic types. It's designed to be easy to use while providing flexible model serialization and configuration options.
 
+## Use Cases
+
+GOML is ideal for a wide range of machine learning applications:
+
+- **Fraud Detection**: Build models that analyze transaction patterns and flag suspicious activities by combining numerical features (transaction amount, frequency) with categorical data (location, merchant type).
+
+- **Financial Analytics**: Predict market trends, stock prices, and investment outcomes using both quantitative metrics and qualitative factors.
+
+- **User Behavior Prediction**: Forecast user actions on websites or apps by analyzing a mix of behavioral data (time spent, clicks) and user attributes (demographics, preferences).
+
+- **IoT Data Processing**: Process sensor data with varied types (temperature, status indicators, categorical states) to predict system behavior or failures.
+
+- **Customer Analytics**: Create personalized recommendation systems by combining purchase history, demographic information, and preference data.
+
+- **Healthcare Monitoring**: Analyze patient data to predict health outcomes or detect anomalies using vital signs, test results, and treatment categories.
+
+- **Resource Allocation**: Optimize resource distribution in systems by predicting demands based on historical usage patterns and categorical variables.
+
+Built with Go's performance and simplicity in mind, GOML makes it easy to integrate machine learning capabilities into your Go applications without the complexity of large ML frameworks.
+
 ## Features
 
 - Support for multiple input and output parameters
